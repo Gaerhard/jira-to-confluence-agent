@@ -1,6 +1,6 @@
 # IT Support Knowledge Base Automation
 
-An n8n workflow system that automatically analyzes resolved Jira IT support tickets, detects recurring issues, and generates knowledge base articles in Confluence — without any human intervention.
+An n8n workflow system that automatically analyzes resolved Jira IT support tickets, detects recurring issues, and generates knowledge base articles in Confluence, without any human intervention.
 
 ---
 
