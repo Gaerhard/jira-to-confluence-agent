@@ -1,0 +1,357 @@
+{
+  "name": "Logger - Execution Tracker",
+  "nodes": [
+    {
+      "parameters": {
+        "content": "## 📋 Logger Simplifié\n\n**Rôle** : tracer chaque exécution d'agent IA dans une Google Sheet, et notifier Discord en cas d'erreur.\n\n**Pas de comptage de tokens** : pour les coûts, regarder hebdomadairement la console du fournisseur LLM (OpenAI / Anthropic).\n\n**Comment l'utiliser** :\n1. Importer ce workflow dans n8n\n2. Configurer les credentials Google Sheets\n3. Créer une Sheet avec 5 colonnes (voir bloc vert)\n4. Depuis votre agent : ajouter un node **Execute Workflow** qui pointe vers ce workflow\n5. Lui passer 4 champs (voir bloc bleu)",
+        "height": 360,
+        "width": 460,
+        "color": 4
+      },
+      "id": "11c45c3d-1ba8-4b78-890a-5fa62f44da76",
+      "name": "📘 Comment utiliser",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        0,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "content": "## 📥 Format d'entrée\n\nL'agent appelant doit passer ces 4 champs :\n\n```\nworkflow_name : {{ $workflow.name }}\nexecution_id  : {{ $execution.id }}\nstatus        :  à définir\nerror_message : à définir & (vide si succès)\n```\n\n💡 Pour les erreurs : appeler ce Logger depuis un Error Trigger avec `status: 'error'`.",
+        "height": 360,
+        "width": 380,
+        "color": 5
+      },
+      "id": "8f578bfb-df77-42f7-8ec9-58b62742ae90",
+      "name": "📥 Format d'entrée",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        496,
+        -16
+      ]
+    },
+    {
+      "parameters": {
+        "content": "## 📑 Format de la Sheet\n\nCréer une feuille Google Sheets avec un onglet « Logs » et 5 colonnes en ligne 1 :\n\n| Colonne | Description |\n|---|---|\n| timestamp | Date/heure ISO |\n| workflow_name | Nom de l'agent |\n| execution_id | ID natif n8n |\n| status | success / error |\n| error_message | Vide si succès |\n",
+        "height": 360,
+        "width": 380,
+        "color": 6
+      },
+      "id": "2b6d8443-5242-4744-9700-b65ca4dae4ab",
+      "name": "📑 Format de la Sheet",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        912,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "content": "## ⚙️ À configurer\n\n1. **Sheet ID** : remplacer dans le node Google Sheets\n2. **Credentials Google** : OAuth via le node\n3. **Discord webhook** : déjà configuré sur le salon Erreurs ; à adapter si besoin\n\n## 🔌 Appel depuis l'agent\n\nNode **Execute Workflow** :\n- Workflow : ce Logger\n- Wait for completion (option) : ON\n- **Continue On Error : ON** (le logging ne doit jamais bloquer la réponse à l'utilisateur)",
+        "height": 360,
+        "width": 380,
+        "color": 7
+      },
+      "id": "ce02b789-7f1b-46ac-ba60-24f5f2998b33",
+      "name": "⚙️ Configuration",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        1312,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "workflowInputs": {
+          "values": [
+            {
+              "name": "workflow_name"
+            },
+            {
+              "name": "execution_id"
+            },
+            {
+              "name": "status"
+            },
+            {
+              "name": "error_message"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        144,
+        480
+      ],
+      "id": "531df8e3-d962-49f8-af32-757c82cc73df",
+      "name": "When Executed by Another Workflow"
+    },
+    {
+      "parameters": {
+        "jsCode": "// =====================================\n//  Normaliser les champs reçus\n// =====================================\nconst input = $input.first().json;\n\nconst truncate = (text, max = 500) => {\n  if (!text) return '';\n  const s = String(text);\n  return s.length > max ? s.substring(0, max) + '…' : s;\n};\n\nreturn {\n  json: {\n    timestamp: new Date().toISOString(),\n    workflow_name: input.workflow_name || 'unknown',\n    execution_id: input.execution_id || '',\n    duration_ms: parseInt(input.duration_ms) || 0,\n    status: input.status || 'success',\n    error_message: truncate(input.error_message),\n  }\n};"
+      },
+      "id": "f030ac19-77ee-4169-a0e9-929fa1be45ec",
+      "name": "Normalize Log Entry",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        368,
+        480
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "15UrlqwJAoTqAYnY2KSoTL9D2xX9-TI_ABcgo9xPksQI",
+          "mode": "list",
+          "cachedResultName": "logs_n8n",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "logs",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "workflow_name": "={{ $workflow.name }}",
+            "execution_id": "={{ $execution.id }}",
+            "timestamp": "={{ $json.timestamp }}",
+            "status": "={{ $json.status }}",
+            "error_message": "={{ $json.error_message }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "timestamp",
+              "displayName": "timestamp",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "workflow_name",
+              "displayName": "workflow_name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "execution_id",
+              "displayName": "execution_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "status",
+              "displayName": "status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "error_message",
+              "displayName": "error_message",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "id": "ef31daa7-425f-4c17-a718-ecbec2abe6a8",
+      "name": "Write to Google Sheets",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [
+        624,
+        480
+      ],
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 2000,
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "IbghCOrIhRBHUj8t",
+          "name": "Google Sheets OAuth2 API"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://discord.com/api/webhooks/",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"username\": \"🤖 Agent Logger\",\n  \"embeds\": [{\n    \"title\": \"❌ Erreur Agent : {{ $('Normalize Log Entry').item.json.workflow_name }}\",\n    \"description\": \"```{{ $('Normalize Log Entry').item.json.error_message }}```\",\n    \"color\": 15158332,\n    \"fields\": [\n      { \"name\": \"Execution ID\", \"value\": \"{{ $('Normalize Log Entry').item.json.execution_id }}\", \"inline\": true },\n      { \"name\": \"Durée\", \"value\": \"{{ $('Normalize Log Entry').item.json.duration_ms }} ms\", \"inline\": true }\n    ],\n    \"timestamp\": \"{{ $('Normalize Log Entry').item.json.timestamp }}\"\n  }]\n}",
+        "options": {}
+      },
+      "id": "0982e189-7a6d-4de5-9679-07c25bb473e2",
+      "name": "Notify Discord on Error",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1152,
+        384
+      ],
+      "continueOnFail": true
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 1
+          },
+          "conditions": [
+            {
+              "id": "is-error",
+              "leftValue": "={{ $('Normalize Log Entry').item.json.status }}",
+              "rightValue": "error",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "5ce6ed9a-38a2-4be8-b7d7-332c26285983",
+      "name": "If Error?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        880,
+        480
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// =====================================\n//  Confirmation au workflow appelant\n// =====================================\nconst data = $('Normalize Log Entry').first().json;\n\nreturn {\n  json: {\n    logged: true,\n    timestamp: data.timestamp,\n    status: data.status,\n  }\n};"
+      },
+      "id": "8a1d8512-cb16-41f4-ab02-87eb09cdbd38",
+      "name": "Return Confirmation",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1376,
+        576
+      ]
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "When Executed by Another Workflow": {
+      "main": [
+        [
+          {
+            "node": "Normalize Log Entry",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Normalize Log Entry": {
+      "main": [
+        [
+          {
+            "node": "Write to Google Sheets",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Write to Google Sheets": {
+      "main": [
+        [
+          {
+            "node": "If Error?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Notify Discord on Error": {
+      "main": [
+        [
+          {
+            "node": "Return Confirmation",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If Error?": {
+      "main": [
+        [
+          {
+            "node": "Notify Discord on Error",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Return Confirmation",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "7342dffe-eece-416f-acaf-017608381e46",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "3dcbb0182b61858dbd695c22b0a274e7d6f39445ddef0dd7e4d0304dcd947e9e"
+  },
+  "nodeGroups": [],
+  "id": "u5m6QsBJ3NkBHDqc",
+  "tags": [
+    {
+      "updatedAt": "2026-06-08T09:36:54.224Z",
+      "createdAt": "2026-06-08T09:36:54.224Z",
+      "id": "15v6rjHDe3Czh1yU",
+      "name": "Logger"
+    }
+  ]
+}

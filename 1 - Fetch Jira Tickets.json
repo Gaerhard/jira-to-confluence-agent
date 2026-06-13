@@ -1,0 +1,460 @@
+{
+  "name": "1 - Fetch Jira Tickets",
+  "nodes": [
+    {
+      "parameters": {
+        "inputSource": "passthrough"
+      },
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        -816,
+        160
+      ],
+      "id": "530b8744-b1b0-4413-b542-5a59a26c5e46",
+      "name": "When Executed by Another Workflow"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "4aee7941-f69a-4306-a165-3e3abb17a381",
+              "leftValue": "={{ $json }}",
+              "rightValue": "",
+              "operator": {
+                "type": "object",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        -448,
+        160
+      ],
+      "id": "013a1c07-3d4f-4685-828d-d1ce4b6eea51",
+      "name": "If"
+    },
+    {
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "u5m6QsBJ3NkBHDqc",
+          "mode": "list",
+          "cachedResultUrl": "/workflow/u5m6QsBJ3NkBHDqc",
+          "cachedResultName": "Logger Simplifié - Suivi Agent IA - exemple eleves"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "workflow_name": "={{ $workflow.name }}",
+            "execution_id": "={{ $workflow.id }}",
+            "status": "OK",
+            "error_message": "N/A"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "workflow_name",
+              "displayName": "workflow_name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "execution_id",
+              "displayName": "execution_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "status",
+              "displayName": "status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "error_message",
+              "displayName": "error_message",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": true
+        },
+        "options": {
+          "waitForSubWorkflow": false
+        }
+      },
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.3,
+      "position": [
+        1072,
+        176
+      ],
+      "id": "5e2d749e-9eb3-4e2a-bbae-e33f2e3464fb",
+      "name": "Logger"
+    },
+    {
+      "parameters": {
+        "operation": "getAll",
+        "options": {
+          "jql": "status in (Resolved, Done, Completed, Closed) AND updatedDate >= -60d AND (\"Connaissance associée ?[Dropdown]\" = EMPTY OR \"Connaissance associée ?[Dropdown]\" = NON)"
+        }
+      },
+      "type": "n8n-nodes-base.jira",
+      "typeVersion": 1,
+      "position": [
+        -624,
+        160
+      ],
+      "id": "396461a1-15fe-4a46-8833-90cd78a5fe19",
+      "name": "Fetch Resolved Jira Issues",
+      "alwaysOutputData": true,
+      "credentials": {
+        "jiraSoftwareCloudApi": {
+          "id": "mmwjZkqXmJvPrhjI",
+          "name": "Jira SW Cloud account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "c6c2cab2-8e2f-432b-9914-c5879047a511",
+              "name": "project_name",
+              "value": "={{ $json.fields.project.name }}",
+              "type": "string"
+            },
+            {
+              "id": "6b661abf-324d-44dc-9c85-f2e5b211cef3",
+              "name": "key",
+              "value": "={{ $json.key }}",
+              "type": "string"
+            },
+            {
+              "id": "f534af83-f362-4e98-a245-ebc09e2d5e6b",
+              "name": "status",
+              "value": "={{ $json.fields.status.name }}",
+              "type": "string"
+            },
+            {
+              "id": "2a8f5d4d-0d17-49e2-ad58-69cabacb4922",
+              "name": "connaissance",
+              "value": "={{ $json.fields.customfield_10108 }}",
+              "type": "string"
+            },
+            {
+              "id": "0a8e0c8c-da7a-46af-bbc8-647867215569",
+              "name": "résumé",
+              "value": "={{ $json.fields.summary }}",
+              "type": "string"
+            },
+            {
+              "id": "ebae91d8-0dec-45d9-bd21-932fde81a0a9",
+              "name": "description",
+              "value": "={{ $json.fields.description }}",
+              "type": "string"
+            },
+            {
+              "id": "f2d98d56-dd7b-49b7-a753-abb3bd8b875d",
+              "name": "",
+              "value": "",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -224,
+        160
+      ],
+      "id": "339a46ec-e450-4a2a-91ce-6e11f74b5577",
+      "name": "Extract Issues Fields"
+    },
+    {
+      "parameters": {
+        "resource": "issueComment",
+        "operation": "getAll",
+        "issueKey": "={{ $json.key }}",
+        "returnAll": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.jira",
+      "typeVersion": 1,
+      "position": [
+        -16,
+        352
+      ],
+      "id": "2e627138-07c2-44c7-9f78-e9a6f34259fd",
+      "name": "Fetch issues comments",
+      "credentials": {
+        "jiraSoftwareCloudApi": {
+          "id": "mmwjZkqXmJvPrhjI",
+          "name": "Jira SW Cloud account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "8b79bf34-38d8-4a9f-a5a1-9674e060e870",
+              "name": "ticketKey",
+              "value": "={{ $json.ticketKey }}",
+              "type": "string"
+            },
+            {
+              "id": "14fe3d76-5a65-420e-8a5c-7a2be4fadd61",
+              "name": "text",
+              "value": "={{ $json.body.content[0].content[0].text }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        352,
+        352
+      ],
+      "id": "ada479cc-aae3-450e-ac9e-618a4e1f990b",
+      "name": "Extract Comment Text"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "a1",
+              "name": "ticketKey",
+              "value": "={{ $('Fetch Resolved Jira Issues').item.json.key }}",
+              "type": "string"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "id": "79c12f08-df5c-4777-af2a-59ad4fd2f556",
+      "name": "Tag Comment with Ticket Key",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        160,
+        352
+      ]
+    },
+    {
+      "parameters": {
+        "mode": "combine",
+        "fieldsToMatchString": "key=ticketKey",
+        "joinMode": "keepEverything",
+        "options": {}
+      },
+      "id": "2871a29f-4fcc-4e69-bebe-feb79d72bdf8",
+      "name": "Merge Issues and Comments",
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        624,
+        176
+      ],
+      "alwaysOutputData": false
+    },
+    {
+      "parameters": {
+        "jsCode": "const items_all = $input.all().map(i => i.json);\n\n// Séparer tickets et commentaires\nconst tickets     = items_all.filter(i => i.key && !i.ticketKey);\nconst commentaires = items_all.filter(i => i.ticketKey);\n\n// Pour chaque ticket, trouver ses commentaires\nreturn tickets.map(ticket => {\n  const ticketCommentaires = commentaires.filter(c => c.ticketKey === ticket.key);\n  \n  const commentairesFormatted = {};\n  ticketCommentaires.forEach((c, i) => {\n    commentairesFormatted[`comment${i + 1}`] = {\n      contenu: c.text\n    };\n  });\n\n  return {\n    json: {\n      ...ticket,\n      commentaires: commentairesFormatted\n    }\n  };\n});"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        832,
+        176
+      ],
+      "id": "e673258c-6f3d-440f-8f04-43dca19dce68",
+      "name": "Build Issues with Comments"
+    },
+    {
+      "parameters": {
+        "errorMessage": "Aucun ticket Jira à analyser"
+      },
+      "type": "n8n-nodes-base.stopAndError",
+      "typeVersion": 1,
+      "position": [
+        -240,
+        384
+      ],
+      "id": "b77918bf-9a24-4c00-b410-e0c88b2520bb",
+      "name": "Error - No Tickets Found"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "When Executed by Another Workflow": {
+      "main": [
+        [
+          {
+            "node": "Fetch Resolved Jira Issues",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "Extract Issues Fields",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Error - No Tickets Found",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fetch Resolved Jira Issues": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract Issues Fields": {
+      "main": [
+        [
+          {
+            "node": "Merge Issues and Comments",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Fetch issues comments",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fetch issues comments": {
+      "main": [
+        [
+          {
+            "node": "Tag Comment with Ticket Key",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract Comment Text": {
+      "main": [
+        [
+          {
+            "node": "Merge Issues and Comments",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Tag Comment with Ticket Key": {
+      "main": [
+        [
+          {
+            "node": "Extract Comment Text",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge Issues and Comments": {
+      "main": [
+        [
+          {
+            "node": "Build Issues with Comments",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build Issues with Comments": {
+      "main": [
+        [
+          {
+            "node": "Logger",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "timeSavedMode": "fixed",
+    "errorWorkflow": "7LL8KWQUgRB9kWE0",
+    "callerPolicy": "workflowsFromSameOwner",
+    "availableInMCP": false
+  },
+  "versionId": "fd42b9be-d895-48cf-9fba-98a9f92b82d9",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "3dcbb0182b61858dbd695c22b0a274e7d6f39445ddef0dd7e4d0304dcd947e9e"
+  },
+  "nodeGroups": [],
+  "id": "ST9ZGuO8MC2qGA3W",
+  "tags": []
+}

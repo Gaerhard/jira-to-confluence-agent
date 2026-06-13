@@ -1,0 +1,792 @@
+{
+  "name": "2 - Check KB & Find Similar Tickets",
+  "nodes": [
+    {
+      "parameters": {
+        "inputSource": "passthrough"
+      },
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        -704,
+        -16
+      ],
+      "id": "a1648f4f-cad8-46d1-895d-a4243d266e57",
+      "name": "When Executed by Another Workflow"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "gpt-4.1-mini",
+          "mode": "list",
+          "cachedResultName": "gpt-4.1-mini"
+        },
+        "builtInTools": {},
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.3,
+      "position": [
+        512,
+        176
+      ],
+      "id": "4c91172a-8a4f-49b5-bcd2-5d5e19ce5117",
+      "name": "OpenAI Chat Model",
+      "credentials": {
+        "openAiApi": {
+          "id": "N4wpXRvHljVHUMJc",
+          "name": "OpenAI account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "gpt-4o-mini",
+          "mode": "list",
+          "cachedResultName": "gpt-4o-mini"
+        },
+        "builtInTools": {},
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.3,
+      "position": [
+        1504,
+        336
+      ],
+      "id": "613f3868-ea44-476b-a1d5-22b47f71fc27",
+      "name": "OpenAI Chat Model1",
+      "credentials": {
+        "openAiApi": {
+          "id": "N4wpXRvHljVHUMJc",
+          "name": "OpenAI account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "u5m6QsBJ3NkBHDqc",
+          "mode": "list",
+          "cachedResultUrl": "/workflow/u5m6QsBJ3NkBHDqc",
+          "cachedResultName": "Logger Simplifié - Suivi Agent IA - exemple eleves"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "execution_id": "={{ $workflow.id }}",
+            "workflow_name": "={{ $workflow.name }}",
+            "status": "OK",
+            "error_message": "N/A"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "workflow_name",
+              "displayName": "workflow_name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "execution_id",
+              "displayName": "execution_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "status",
+              "displayName": "status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "error_message",
+              "displayName": "error_message",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": true
+        },
+        "options": {
+          "waitForSubWorkflow": false
+        }
+      },
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.3,
+      "position": [
+        2512,
+        -160
+      ],
+      "id": "562e352f-da22-4691-85ae-d87c9997a2dd",
+      "name": "Logs"
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "function getValue(obj, keys, defaultValue = '') {\n  for (const key of keys) {\n    if (obj[key] !== undefined && obj[key] !== null) {\n      return obj[key];\n    }\n  }\n  return defaultValue;\n}\n\nfunction commentsToText(commentaires) {\n  if (!commentaires) return '';\n  if (Array.isArray(commentaires)) {\n    return commentaires.map((c, i) => `Commentaire ${i + 1} : ${c.contenu || c.text || ''}`).join('\\n');\n  }\n  if (typeof commentaires === 'object') {\n    return Object.entries(commentaires).map(([k, v]) => `${k} : ${v.contenu || v.text || ''}`).join('\\n');\n  }\n  return String(commentaires);\n}\n\nfunction cleanForKeywords(text) {\n  return String(text || '').toLowerCase().normalize('NFD').replace(/[\\u0300-\\u036f]/g, '').replace(/[^a-z0-9\\s]/g, ' ').replace(/\\s+/g, ' ').trim();\n}\n\nfunction buildKeywords(resume, description) {\n  const stopwords = new Set([\n    // Clés techniques n8n / structure JSON\n    'comment1', 'comment2', 'comment3', 'comment4', 'comment5',\n    'comment6', 'comment7', 'comment8', 'comment9', 'comment10',\n\n    // Pronoms et déterminants\n    'le', 'la', 'les', 'un', 'une', 'des', 'du', 'au', 'aux',\n    'mon', 'ton', 'son', 'notre', 'votre', 'leur', 'leurs',\n    'moi', 'toi', 'lui', 'eux', 'elle', 'elles', 'nous', 'vous',\n    'ce', 'cet', 'cette', 'ces', 'cela', 'ceci', 'ca',\n    'qui', 'que', 'quoi', 'dont', 'ou', 'quel', 'quelle', 'quels', 'quelles',\n\n    // Prépositions et conjonctions\n    'avec', 'dans', 'pour', 'par', 'sur', 'sous', 'entre', 'vers', 'chez',\n    'sans', 'selon', 'depuis', 'avant', 'apres', 'pendant', 'contre',\n    'mais', 'donc', 'alors', 'ainsi', 'aussi', 'comme', 'car', 'ni', 'or',\n    'et', 'ou', 'si', 'que', 'quand', 'lorsque', 'puisque', 'quoique',\n\n    // Verbes courants conjugués\n    'est', 'sont', 'etait', 'etaient', 'sera', 'seront', 'soit',\n    'avoir', 'etre', 'suis', 'avez', 'avons', 'ont', 'avait', 'avaient',\n    'faire', 'fait', 'faites', 'fais', 'faisant',\n    'aller', 'vais', 'allez', 'allons', 'allait',\n    'voir', 'vois', 'voyez', 'voyons',\n    'dire', 'dis', 'dites', 'disons',\n    'pouvoir', 'peux', 'peut', 'pouvez', 'pouvons', 'pouvait',\n    'vouloir', 'veux', 'veut', 'voulez', 'voulons',\n    'devoir', 'dois', 'doit', 'devez', 'devons', 'devait',\n    'prendre', 'prends', 'prend', 'prenez', 'prenons',\n    'mettre', 'mets', 'met', 'mettez', 'mettons',\n    'lance', 'lancer', 'affiche', 'afficher', 'bloque', 'bloquer',\n    'arrete', 'arreter', 'ouvrir', 'ouvre', 'ouvrez',\n    'recevoir', 'recois', 'recoit', 'recevez',\n    'valider', 'valide', 'validez', 'valide',\n    'afficher', 'affiche', 'affichage',\n    'installer', 'installe', 'installez',\n    'redemarrer', 'redemarrage', 'redemarre',\n    'connecter', 'connecte', 'connectez', 'connexion',\n\n    // Adverbes courants\n    'tres', 'plus', 'moins', 'bien', 'mal', 'mieux', 'encore',\n    'toujours', 'jamais', 'souvent', 'parfois', 'rarement',\n    'ici', 'la', 'voici', 'voila', 'maintenant', 'puis', 'ensuite',\n    'deja', 'enfin', 'seulement', 'aussi', 'donc', 'pourtant',\n    'cependant', 'toutefois', 'neanmoins', 'sinon',\n\n    // Mots IT génériques\n    'ticket', 'probleme', 'erreur', 'issue', 'incident', 'demande',\n    'utilisateur', 'user', 'client', 'agent', 'technicien',\n    'application', 'logiciel', 'systeme', 'service',\n    'message', 'notification', 'alerte', 'fenetre', 'ecran',\n    'acces', 'droit', 'permission', 'profil', 'compte', 'session',\n    'reseau', 'internet', 'connexion', 'poste', 'ordinateur', 'machine',\n    'support', 'aide', 'assistance', 'helpdesk',\n    'bonjour', 'merci', 'cordialement', 'bonne', 'journee', 'bonsoir',\n    'resolution', 'resolu', 'ferme', 'termine', 'clos', 'ouvert',\n    'statut', 'priorite', 'urgent', 'normal', 'faible',\n\n    // Temporel\n    'aujourd', 'hui', 'hier', 'demain', 'matin', 'soir', 'midi',\n    'lundi', 'mardi', 'mercredi', 'jeudi', 'vendredi', 'samedi', 'dimanche',\n    'janvier', 'fevrier', 'mars', 'avril', 'mai', 'juin',\n    'juillet', 'aout', 'septembre', 'octobre', 'novembre', 'decembre',\n    'semaine', 'mois', 'annee', 'heure', 'minute', 'seconde',\n    'depuis', 'pendant', 'durant',\n\n    // Divers\n    'aucun', 'aucune', 'tout', 'tous', 'toute', 'toutes',\n    'autre', 'autres', 'meme', 'memes', 'certain', 'certains',\n    'plusieurs', 'chaque', 'quelque', 'quelques', 'peu', 'beaucoup',\n    'rien', 'personne', 'quelquun',\n    'non', 'oui', 'ok', 'okay', 'voici', 'voila',\n    'numero', 'nom', 'type', 'version', 'nouveau', 'ancienne',\n  ]);\n\n  // Le résumé est prioritaire : on garde les mots dès 2 lettres (ex: \"VPN\", \"AD\")\n  const resumeWords = cleanForKeywords(resume).split(' ').filter(w => w.length >= 2 && !stopwords.has(w));\n\n  // La description est secondaire : on garde les mots significatifs de 4 lettres minimum\n  const bodyWords = cleanForKeywords(description).split(' ').filter(w => w.length >= 4 && !stopwords.has(w));\n\n  // Fusion, dédoublonnage et limitation à 10 mots-clés max\n  return [...new Set([...resumeWords, ...bodyWords])].slice(0, 10);\n}\n\nfunction escapeCql(value) {\n  return String(value || '').replace(/\\\\/g, '\\\\\\\\').replace(/\"/g, '\\\\\"');\n}\n\n// Extraction des données du ticket\nconst ticket = $json;\nconst key = getValue(ticket, ['key']);\nconst resume = getValue(ticket, ['résumé', 'resume', 'summary']);\nconst description = getValue(ticket, ['description']);\nconst resolution = getValue(ticket, ['résolution', 'resolution', 'champ_resolution']);\nconst commentairesText = commentsToText(ticket.commentaires);\n\n// Génération des mots-clés\nconst keywords = buildKeywords(resume, `${description} ${resolution} ${commentairesText}`);\n\n// Court-circuit si pas assez de mots-clés significatifs\nif (keywords.length < 2) {\n  return {\n    json: {\n      ...ticket,\n      key,\n      text_for_analysis: `Résumé: ${resume}\\nDescription: ${description}\\nRésolution: ${resolution}\\nCommentaires: ${commentairesText}`,\n      confluence_keywords: [],\n      confluence_cql: null\n    }\n  };\n}\n\n// Construction du CQL dynamique (5 meilleurs mots-clés)\nconst spaceFilter = 'space = \"BDC\"';\nconst searchTerms = keywords.slice(0, 5);\nconst cqlParts = searchTerms.map(term => `(title ~ \"${escapeCql(term)}\" OR text ~ \"${escapeCql(term)}\")`);\nconst cql = `${spaceFilter} AND type = page AND (${cqlParts.join(' OR ')})`;\n\nreturn {\n  json: {\n    ...ticket,\n    key,\n    text_for_analysis: `Résumé: ${resume}\\nDescription: ${description}\\nRésolution: ${resolution}\\nCommentaires: ${commentairesText}`,\n    confluence_keywords: keywords,\n    confluence_cql: cql\n  }\n};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -432,
+        -16
+      ],
+      "id": "bd4f3732-9833-4c7f-93c3-383fdb78e38c",
+      "name": "Extract Search Keywords"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "56582891-2251-4d3c-9e18-6d22968b06ee",
+              "leftValue": "={{ $json.confluence_cql }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        -192,
+        -16
+      ],
+      "id": "f443267b-1506-4b32-aff5-631c1b0a3e85",
+      "name": "Has Search Keywords?"
+    },
+    {
+      "parameters": {
+        "url": "https://mainiaproject.atlassian.net/wiki/rest/api/content/search",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBasicAuth",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "cql",
+              "value": "={{ $json.confluence_cql }}"
+            },
+            {
+              "name": "expand",
+              "value": "body.storage"
+            }
+          ]
+        },
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "X-Atlassian-Token",
+              "value": "no-check"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        32,
+        -16
+      ],
+      "id": "4c38b7d6-f5b9-4e67-aa31-3ee7c170730f",
+      "name": "Search Confluence KB Pages",
+      "credentials": {
+        "httpBasicAuth": {
+          "id": "ndAC4A6wR6LIBzhR",
+          "name": "Unnamed credential 3"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "function stripHtml(html) {\n  return html\n    .replace(/<[^>]+>/g, ' ')\n    .replace(/&eacute;/g, 'é')\n    .replace(/&agrave;/g, 'à')\n    .replace(/&egrave;/g, 'è')\n    .replace(/&acirc;/g, 'â')\n    .replace(/&ocirc;/g, 'ô')\n    .replace(/&ucirc;/g, 'û')\n    .replace(/&ecirc;/g, 'ê')\n    .replace(/&ccedil;/g, 'ç')\n    .replace(/&quot;/g, '\"')\n    .replace(/&amp;/g, '&')\n    .replace(/&nbsp;/g, ' ')\n    .replace(/&laquo;/g, '«')\n    .replace(/&raquo;/g, '»')\n    .replace(/&gt;/g, '>')\n    .replace(/&lt;/g, '<')\n    .replace(/\\s+/g, ' ')\n    .trim();\n}\n\nfunction estPageNavigation(contenu) {\n  return contenu.includes('ac:structured-macro') && contenu.includes('recently-updated');\n}\n\nconst tousLesTickets = $('Extract Search Keywords').all();\n\nreturn $input.all().map((item, index) => {\n  const confluenceResults = item.json.results || [];\n  const ticketOrigine = tousLesTickets[index]?.json || {};\n\n  let fichesConcatenees = \"\";\n  let pagesFiltrees = [];\n\n  if (confluenceResults.length === 0) {\n    fichesConcatenees = \"Aucune fiche trouvée.\";\n  } else {\n    confluenceResults.forEach((page) => {\n      const contenuBrut = page.body?.storage?.value || \"\";\n      if (!contenuBrut || estPageNavigation(contenuBrut)) return;\n\n      const contenu = stripHtml(contenuBrut);\n      pagesFiltrees.push(page.title);\n      fichesConcatenees += `\\n\\n--- FICHE : ${page.title} ---\\n${contenu}`;\n    });\n\n    if (fichesConcatenees === \"\") {\n      fichesConcatenees = \"Aucune fiche pertinente trouvée.\";\n    }\n  }\n\n  return {\n    json: {\n      ...ticketOrigine,\n      fiches_confluence: fichesConcatenees,\n      debug_pages_trouvees: pagesFiltrees\n    }\n  };\n});"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        256,
+        -16
+      ],
+      "id": "270ed4bb-ceb9-4bc6-b774-b6f23ab00f45",
+      "name": "Filter Relevant KB Pages"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Tu es un agent de support IT de niveau 2.\nVoici les détails d'un ticket Jira anonymisé :\n{{ $json.text_for_analysis }}\n\nVoici les fiches de connaissances Confluence potentiellement liées :\n{{ $json.fiches_confluence }}\n\nTa mission : Déterminer de manière stricte et logique si l'une de ces fiches contient EXACTEMENT la procédure permettant de résoudre le problème décrit dans le ticket.\nNe te contente pas d'une vague ressemblance. Les symptômes et la résolution du ticket doivent correspondre à la fiche.\n\nRègles de sortie :\nTu dois répondre UNIQUEMENT par un objet JSON avec les 3 clés suivantes :\n1. \"connaissance_trouvee\" (boolean : true ou false)\n2. \"titre_fiche\" (string : le titre de la fiche correspondante, ou null si false)\n3. \"justification\" (string : explique en une ligne pourquoi c'est un match ou pourquoi ça ne l'est pas)",
+        "batching": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "typeVersion": 1.9,
+      "position": [
+        512,
+        -16
+      ],
+      "id": "2e2698d1-ead6-4d10-9fa8-52e8eda4c688",
+      "name": "LLM - Check KB Match"
+    },
+    {
+      "parameters": {
+        "jsCode": "return $input.all().map((item, index) => {\n  let responseText = item.json.text;\n  responseText = responseText.replace(/```json/gi, '').replace(/```/g, '').trim();\n  const decision = JSON.parse(responseText);\n\n  return {\n    json: {\n      ...$('Extract Search Keywords').all()[index].json,\n      decision_ia: decision\n    }\n  };\n});"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        848,
+        -16
+      ],
+      "id": "093e1553-f4cd-440d-8953-b4c7ca88117e",
+      "name": "Parse KB Match Decision"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "d1ec3a22-d472-4981-80a3-b4793b97a38b",
+              "leftValue": "={{ $json.decision_ia.connaissance_trouvee }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        1056,
+        -16
+      ],
+      "id": "ebecaff8-a9de-4480-b732-99d69e3f9b4b",
+      "name": "KB Article Already Exists?"
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "issueKey": "={{ $json.key }}",
+        "updateFields": {
+          "customFieldsUi": {
+            "customFieldsValues": [
+              {
+                "fieldId": {
+                  "__rl": true,
+                  "value": "customfield_10108",
+                  "mode": "id"
+                },
+                "fieldValue": "={{ {\"id\": \"10147\"} }}"
+              }
+            ]
+          }
+        }
+      },
+      "type": "n8n-nodes-base.jira",
+      "typeVersion": 1,
+      "position": [
+        1360,
+        -112
+      ],
+      "id": "e5b1eb85-076e-4a9f-80ad-3d0d6a8e42d1",
+      "name": "Update Jira - Mark KB Found",
+      "credentials": {
+        "jiraSoftwareCloudApi": {
+          "id": "mmwjZkqXmJvPrhjI",
+          "name": "Jira SW Cloud account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Collecte tous les tickets de la branche false en un seul objet\nconst tickets = $input.all().map(item => ({\n  key: item.json.key,\n  résumé: item.json.résumé,\n  description: item.json.description,\n  commentaires: item.json.commentaires,\n  text_for_analysis: item.json.text_for_analysis\n}));\n\nreturn {\n  json: {\n    tickets_sans_fiche: tickets,\n    nombre_tickets: tickets.length\n  }\n};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1312,
+        144
+      ],
+      "id": "8da70980-c3eb-4d7d-82dd-cac46d720b70",
+      "name": "Aggregate Tickets Without KB"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "==Tu es un Knowledge Manager IT.\n\nVoici une liste de {{ $json.nombre_tickets }} tickets de support sans fiche de connaissance associée :\n{{ JSON.stringify($json.tickets_sans_fiche, null, 2) }}\n\nTa mission : Déterminer si AU MOINS 3 de ces tickets traitent d'une problématique SUFFISAMENT SIMILAIRE pour justifier la création d'une fiche de connaissance commune.\n\nCritères de similarité : même symptôme, même cause racine, ou même procédure de résolution.\n\nSi les tickets n'ont pas de similarités évidentes alors ne les prend pas en compte et ne génère pas de fiche de connaissance en rapport.\nLes tickets doivent ABSOLUMENT avoir une SIMILARITÉ ÉVIDENTE.\nN'invente RIEN afin de justifier une quelconque similarité\nIl faut ABSOLUMENT 3 tickets en rapport AU MOINS pour générer une fiche, si il y en a moins ne GÉNÈRE RIEN\n\nRègles de sortie :\nTu dois répondre UNIQUEMENT par un objet JSON avec les clés suivantes :\n1. \"fiche_a_creer\" (boolean : true si au moins 3 tickets similaires, false sinon)\n2. \"problematique\" (string : description en une phrase de la problématique commune, ou null si false)\n3. \"tickets_concernes\" (array : liste des keys des tickets similaires, ou [] si false)\n4. \"justification\" (string : explique en 2-3 lignes ton raisonnement)",
+        "batching": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "typeVersion": 1.9,
+      "position": [
+        1504,
+        144
+      ],
+      "id": "1ad6f5fb-a0be-4453-8362-bad5d847cb09",
+      "name": "LLM - Analyze Issues Similarity"
+    },
+    {
+      "parameters": {
+        "jsCode": "let responseText = $input.first().json.text;\nresponseText = responseText.replace(/```json/gi, '').replace(/```/g, '').trim();\nconst decision = JSON.parse(responseText);\n\n// On récupère les données complètes des tickets concernés\nconst tousLesTickets = $('Aggregate Tickets Without KB').first().json.tickets_sans_fiche;\nconst ticketsConcernes = tousLesTickets.filter(t => \n  decision.tickets_concernes.includes(t.key)\n);\n\nreturn {\n  json: {\n    fiche_a_creer: decision.fiche_a_creer,\n    problematique: decision.problematique,\n    tickets_concernes: ticketsConcernes,\n    justification: decision.justification\n  }\n};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1840,
+        144
+      ],
+      "id": "72647fe3-e261-4321-8a0e-8cda85650369",
+      "name": "Parse Similarity Decision"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "f529f8eb-2f56-4628-87c6-2f95a64f4250",
+              "leftValue": "={{ $json.fiche_a_creer }}",
+              "rightValue": "true",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "looseTypeValidation": "=",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        2064,
+        64
+      ],
+      "id": "d9817ece-4622-49c2-addc-a0cb85f5bd5d",
+      "name": "Should Create KB Article?"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        -1120,
+        304
+      ],
+      "id": "881240c9-6c5a-43f2-b20c-b77bc0e784d8",
+      "name": "Manual trigger - debug"
+    },
+    {
+      "parameters": {
+        "operation": "getAll",
+        "options": {
+          "jql": "status in (Resolved, Done, Completed, Closed) AND updatedDate >= -60d AND (\"Connaissance associée ?[Dropdown]\" = EMPTY OR \"Connaissance associée ?[Dropdown]\" = NON)"
+        }
+      },
+      "type": "n8n-nodes-base.jira",
+      "typeVersion": 1,
+      "position": [
+        -912,
+        304
+      ],
+      "id": "1bca9abd-1300-417d-9f5b-4d950f9f6433",
+      "name": "Debug - get_resolved_jira_issues",
+      "alwaysOutputData": true,
+      "credentials": {
+        "jiraSoftwareCloudApi": {
+          "id": "mmwjZkqXmJvPrhjI",
+          "name": "Jira SW Cloud account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "c6c2cab2-8e2f-432b-9914-c5879047a511",
+              "name": "project_name",
+              "value": "={{ $json.fields.project.name }}",
+              "type": "string"
+            },
+            {
+              "id": "6b661abf-324d-44dc-9c85-f2e5b211cef3",
+              "name": "key",
+              "value": "={{ $json.key }}",
+              "type": "string"
+            },
+            {
+              "id": "f534af83-f362-4e98-a245-ebc09e2d5e6b",
+              "name": "status",
+              "value": "={{ $json.fields.status.name }}",
+              "type": "string"
+            },
+            {
+              "id": "2a8f5d4d-0d17-49e2-ad58-69cabacb4922",
+              "name": "connaissance",
+              "value": "={{ $json.fields.customfield_10108 }}",
+              "type": "string"
+            },
+            {
+              "id": "0a8e0c8c-da7a-46af-bbc8-647867215569",
+              "name": "résumé",
+              "value": "={{ $json.fields.summary }}",
+              "type": "string"
+            },
+            {
+              "id": "ebae91d8-0dec-45d9-bd21-932fde81a0a9",
+              "name": "description",
+              "value": "={{ $json.fields.description }}",
+              "type": "string"
+            },
+            {
+              "id": "f2d98d56-dd7b-49b7-a753-abb3bd8b875d",
+              "name": "",
+              "value": "",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -656,
+        256
+      ],
+      "id": "dfcea033-f333-4df5-b144-874893eadcf9",
+      "name": "Debug - Extract Issues Fields"
+    },
+    {
+      "parameters": {
+        "jsCode": "return {\n  json: {\n    ...$json,\n    fiches_confluence: \"Aucune fiche trouvée.\",\n    debug_pages_trouvees: []\n  }\n};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        32,
+        288
+      ],
+      "id": "a49565f6-963e-4128-9533-be90086ae3b4",
+      "name": "No KB found"
+    },
+    {
+      "parameters": {
+        "jsCode": "const data = $input.first().json;\n\nreturn {\n  json: {\n    action: \"creer_fiche\",\n    problematique: data.problematique,\n    justification: data.justification,\n    tickets_sources: data.tickets_concernes\n  }\n};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2304,
+        -32
+      ],
+      "id": "b9165875-22ea-4ba4-a92f-f0b39afc473b",
+      "name": "Prepare Output for Main Workflow"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "When Executed by Another Workflow": {
+      "main": [
+        [
+          {
+            "node": "Extract Search Keywords",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "LLM - Check KB Match",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model1": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "LLM - Analyze Issues Similarity",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract Search Keywords": {
+      "main": [
+        [
+          {
+            "node": "Has Search Keywords?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Has Search Keywords?": {
+      "main": [
+        [
+          {
+            "node": "Search Confluence KB Pages",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "No KB found",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Search Confluence KB Pages": {
+      "main": [
+        [
+          {
+            "node": "Filter Relevant KB Pages",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Filter Relevant KB Pages": {
+      "main": [
+        [
+          {
+            "node": "LLM - Check KB Match",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "LLM - Check KB Match": {
+      "main": [
+        [
+          {
+            "node": "Parse KB Match Decision",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parse KB Match Decision": {
+      "main": [
+        [
+          {
+            "node": "KB Article Already Exists?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "KB Article Already Exists?": {
+      "main": [
+        [
+          {
+            "node": "Update Jira - Mark KB Found",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Aggregate Tickets Without KB",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update Jira - Mark KB Found": {
+      "main": [
+        [
+          {
+            "node": "Logs",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Aggregate Tickets Without KB": {
+      "main": [
+        [
+          {
+            "node": "LLM - Analyze Issues Similarity",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "LLM - Analyze Issues Similarity": {
+      "main": [
+        [
+          {
+            "node": "Parse Similarity Decision",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parse Similarity Decision": {
+      "main": [
+        [
+          {
+            "node": "Should Create KB Article?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Should Create KB Article?": {
+      "main": [
+        [
+          {
+            "node": "Prepare Output for Main Workflow",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Manual trigger - debug": {
+      "main": [
+        [
+          {
+            "node": "Debug - get_resolved_jira_issues",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Debug - get_resolved_jira_issues": {
+      "main": [
+        [
+          {
+            "node": "Debug - Extract Issues Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Debug - Extract Issues Fields": {
+      "main": [
+        [
+          {
+            "node": "Extract Search Keywords",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "No KB found": {
+      "main": [
+        [
+          {
+            "node": "LLM - Check KB Match",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prepare Output for Main Workflow": {
+      "main": [
+        [
+          {
+            "node": "Logs",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "90d0ba2c-8acd-4aea-ad65-0142e6e5cd0d",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "3dcbb0182b61858dbd695c22b0a274e7d6f39445ddef0dd7e4d0304dcd947e9e"
+  },
+  "nodeGroups": [],
+  "id": "9z52AgH9KOOWepdF",
+  "tags": []
+}
