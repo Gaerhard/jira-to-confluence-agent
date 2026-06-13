@@ -51,6 +51,9 @@ A shared **Logger** sub-workflow records every execution to Google Sheets and se
 ### `0 - Main Orchestrator`
 The entry point. Triggered weekly (or manually for testing). Calls each sub-workflow in sequence, routes the output, and sends an email notification when a new KB article is created.
 
+<img width="2157" height="556" alt="image" src="https://github.com/user-attachments/assets/64ec7f05-ce05-4050-bc65-cb669ed23b6e" />
+
+
 ### `1 - Fetch Jira Tickets`
 Queries Jira for tickets that are:
 - In a resolved/done/closed status
@@ -58,6 +61,9 @@ Queries Jira for tickets that are:
 - Not yet linked to a knowledge base article (`customfield_10108` is empty or set to "NON")
 
 For each ticket, it fetches all comments and assembles a structured JSON object (ticket fields + comments) passed to the next workflow.
+
+<img width="2126" height="538" alt="image" src="https://github.com/user-attachments/assets/50cf91cd-bf2b-4cd8-97bc-7a633f33289d" />
+
 
 ### `2 - Check KB & Find Similar Tickets`
 The core intelligence layer. For each ticket:
@@ -68,6 +74,10 @@ The core intelligence layer. For each ticket:
 5. If no match → aggregates all unmatched tickets and calls a second LLM to detect if at least 3 tickets share the same root cause
 6. If a cluster of 3+ similar tickets is found → returns `action: "creer_fiche"` to the orchestrator
 
+<img width="1513" height="430" alt="image" src="https://github.com/user-attachments/assets/856bff82-e9a8-4b51-9981-5e1b90f45b30" />
+<img width="1091" height="433" alt="image" src="https://github.com/user-attachments/assets/0376b5d3-c59a-4b8f-905d-b9188f3a2f18" />
+
+
 ### `3 - Write KB Article to Confluence`
 Receives the identified ticket cluster and:
 1. Fetches a Confluence page template
@@ -75,8 +85,14 @@ Receives the identified ticket cluster and:
 3. Parses the JSON response (title + HTML content)
 4. Creates the page in Confluence via REST API (space `BDC`)
 
+<img width="1979" height="519" alt="image" src="https://github.com/user-attachments/assets/0f64f9d5-0bd5-4f81-9425-175861830b74" />
+
+
 ### `Logger - Execution Tracker`
 A reusable utility sub-workflow called by all other workflows. Logs each execution (workflow name, execution ID, status, error message) to a Google Sheet, and posts a Discord webhook message when `status = error`.
+
+<img width="1708" height="383" alt="image" src="https://github.com/user-attachments/assets/96eebd17-4904-4a14-8c52-ca9475aeea6a" />
+
 
 ---
 
